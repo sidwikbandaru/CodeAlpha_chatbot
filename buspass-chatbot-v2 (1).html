@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BusPass — AI Command Center</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Clash+Display:wght@500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070810;
+      --bg2: #0d0e1a;
+      --surface: #111220;
+      --card: #161829;
+      --card2: #1c1f35;
+      --border: rgba(255, 255, 255, .07);
+      --border2: rgba(255, 255, 255, .13);
+      --gold: #f5c842;
+      --gold2: #ffd966;
+      --cyan: #3de8ff;
+      --violet: #a78bfa;
+      --green: #34d399;
+      --red: #f87171;
+      --orange: #fb923c;
+      --text: #e2e4f0;
+      --text2: #9499c0;
+      --text3: #555880;
+      --font-d: 'Clash Display', sans-serif;
+      --font-b: 'Cabinet Grotesk', sans-serif;
+      --font-m: 'DM Mono', monospace;
+      --r: 6px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      position: relative
+    }
+
+    #cvs {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: .55
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E")
+    }
+
+    .app {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      height: 100vh
+    }
+
+    /* TOPBAR */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 58px;
+      background: rgba(11, 12, 22, .92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--gold), var(--orange));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px rgba(245, 200, 66, .3)
+    }
+
+    .logo-text {
+      font-family: var(--font-d);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -.5px
+    }
+
+    .logo-text b {
+      color: var(--gold)
+    }
+
+    .badge {
+      font-family: var(--font-m);
+      font-size: 9px;
+      background: rgba(167, 139, 250, .12);
+      border: 1px solid rgba(167, 139, 250, .28);
+      color: var(--violet);
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .topbar-center {
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .mode-btn {
+      font-family: var(--font-m);
+      font-size: 10px;
+      padding: 5px 13px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .2s;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .mode-btn.active {
+      background: rgba(245, 200, 66, .1);
+      border-color: rgba(245, 200, 66, .4);
+      color: var(--gold)
+    }
+
+    .mode-btn:hover:not(.active) {
+      border-color: var(--border2);
+      color: var(--text)
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-m);
+      font-size: 10px;
+      color: var(--text2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pa 2s ease infinite
+    }
+
+    @keyframes pa {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(.8)
+      }
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all .2s
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border2);
+      color: var(--text);
+      background: var(--card)
+    }
+
+    /* LAYOUT */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden
+    }
+
+    /* LEFT PANEL */
+    .lpanel {
+      width: 258px;
+      background: rgba(11, 12, 22, .75);
+      backdrop-filter: blur(14px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: width .3s ease
+    }
+
+    .lpanel.collapsed {
+      width: 0;
+      overflow: hidden
+    }
+
+    .psec {
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .plabel {
+      font-family: var(--font-m);
+      font-size: 9px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px
+    }
+
+    .rwidget {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px
+    }
+
+    .rsel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-m);
+      font-size: 11px;
+      padding: 8px 10px;
+      width: 100%;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239499c0'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center
+    }
+
+    .rsel:focus {
+      border-color: var(--gold)
+    }
+
+    .rsel option {
+      background: var(--surface)
+    }
+
+    .rarrow {
+      text-align: center;
+      color: var(--gold);
+      font-size: 13px
+    }
+
+    .wbtn {
+      background: linear-gradient(135deg, var(--gold), var(--orange));
+      border: none;
+      color: var(--bg);
+      font-family: var(--font-d);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      transition: opacity .2s, transform .1s
+    }
+
+    .wbtn:hover {
+      opacity: .9;
+      transform: translateY(-1px)
+    }
+
+    .prompts {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      flex: 1;
+      padding: 10px 12px
+    }
+
+    .prompts::-webkit-scrollbar {
+      width: 2px
+    }
+
+    .prompts::-webkit-scrollbar-thumb {
+      background: var(--border)
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all .18s;
+      text-align: left;
+      color: var(--text2);
+      font-size: 11.5px;
+      font-family: var(--font-b);
+      line-height: 1.4
+    }
+
+    .chip:hover {
+      border-color: rgba(245, 200, 66, .35);
+      color: var(--gold);
+      background: rgba(245, 200, 66, .05);
+      transform: translateX(3px)
+    }
+
+    .chip .ci {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+      background: var(--surface)
+    }
+
+    /* CHAT */
+    .chat-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative
+    }
+
+    .msgs {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      scroll-behavior: smooth
+    }
+
+    .msgs::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .msgs::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px
+    }
+
+    /* WELCOME */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-height: 380px;
+      text-align: center;
+      animation: fup .6s ease
+    }
+
+    .worb {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--gold2), var(--orange));
+      box-shadow: 0 0 60px rgba(245, 200, 66, .22), 0 0 120px rgba(245, 200, 66, .08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin-bottom: 22px;
+      animation: flt 4s ease-in-out infinite
+    }
+
+    @keyframes flt {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-8px)
+      }
+    }
+
+    .wtitle {
+      font-family: var(--font-d);
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--text), var(--text2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .wsub {
+      color: var(--text3);
+      font-size: 13px;
+      max-width: 380px;
+      line-height: 1.7;
+      margin-bottom: 26px
+    }
+
+    .wchips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      justify-content: center;
+      max-width: 500px
+    }
+
+    .wchip {
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 7px 15px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .18s
+    }
+
+    .wchip:hover {
+      background: rgba(245, 200, 66, .08);
+      border-color: rgba(245, 200, 66, .4);
+      color: var(--gold)
+    }
+
+    /* MESSAGES */
+    .mgroup {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 4px;
+      animation: fup .3s ease
+    }
+
+    @keyframes fup {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .mrow {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start
+    }
+
+    .mrow.urow {
+      flex-direction: row-reverse
+    }
+
+    .av {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 2px
+    }
+
+    .bav {
+      background: linear-gradient(135deg, rgba(245, 200, 66, .18), rgba(251, 146, 60, .18));
+      border: 1px solid rgba(245, 200, 66, .22);
+      box-shadow: 0 0 10px rgba(245, 200, 66, .08)
+    }
+
+    .uav {
+      background: linear-gradient(135deg, rgba(61, 232, 255, .13), rgba(167, 139, 250, .13));
+      border: 1px solid rgba(61, 232, 255, .18)
+    }
+
+    .bwrap {
+      flex: 1;
+      max-width: 640px
+    }
+
+    .urow .bwrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end
+    }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 11px;
+      font-size: 13.5px;
+      line-height: 1.75;
+      position: relative
+    }
+
+    .bbub {
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-top-left-radius: 3px;
+      color: var(--text)
+    }
+
+    .ubub {
+      background: linear-gradient(135deg, rgba(61, 232, 255, .11), rgba(167, 139, 250, .09));
+      border: 1px solid rgba(61, 232, 255, .18);
+      border-top-right-radius: 3px;
+      color: var(--text);
+      max-width: 460px
+    }
+
+    .bubble strong {
+      color: var(--gold);
+      font-weight: 600
+    }
+
+    .bubble code {
+      font-family: var(--font-m);
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: var(--cyan)
+    }
+
+    .shead {
+      display: inline-block;
+      font-family: var(--font-m);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--violet);
+      background: rgba(167, 139, 250, .09);
+      border: 1px solid rgba(167, 139, 250, .2);
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin: 7px 0 4px
+    }
+
+    .bubble ul {
+      padding-left: 18px;
+      margin: 5px 0
+    }
+
+    .bubble ul li {
+      margin-bottom: 3px;
+      color: var(--text)
+    }
+
+    .mts {
+      font-family: var(--font-m);
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 4px;
+      padding: 0 2px
+    }
+
+    /* TYPING */
+    .tbub {
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 11px;
+      border-top-left-radius: 3px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: fit-content
+    }
+
+    .tdot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: .4;
+      animation: td 1.2s ease infinite
+    }
+
+    .tdot:nth-child(2) {
+      animation-delay: .2s
+    }
+
+    .tdot:nth-child(3) {
+      animation-delay: .4s
+    }
+
+    @keyframes td {
+
+      0%,
+      60%,
+      100% {
+        opacity: .4;
+        transform: scale(1)
+      }
+
+      30% {
+        opacity: 1;
+        transform: scale(1.3)
+      }
+    }
+
+    /* REACTIONS & FOLLOWUPS */
+    .mactions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 4px;
+      opacity: 0;
+      transition: opacity .2s
+    }
+
+    .mgroup:hover .mactions {
+      opacity: 1
+    }
+
+    .rbtn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--text3);
+      transition: all .15s;
+      font-family: var(--font-m)
+    }
+
+    .rbtn:hover {
+      border-color: var(--border2);
+      color: var(--text)
+    }
+
+    .rbtn.active {
+      background: rgba(245, 200, 66, .1);
+      border-color: rgba(245, 200, 66, .3);
+      color: var(--gold)
+    }
+
+    .followups {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px
+    }
+
+    .fubtn {
+      background: rgba(61, 232, 255, .06);
+      border: 1px solid rgba(61, 232, 255, .2);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11.5px;
+      color: var(--cyan);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: var(--font-b)
+    }
+
+    .fubtn:hover {
+      background: rgba(61, 232, 255, .12);
+      border-color: rgba(61, 232, 255, .4)
+    }
+
+    /* RIGHT PANEL */
+    .rpanel {
+      width: 228px;
+      background: rgba(11, 12, 22, .75);
+      backdrop-filter: blur(14px);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+      transition: width .3s ease
+    }
+
+    .rpanel.collapsed {
+      width: 0;
+      overflow: hidden
+    }
+
+    .rpanel::-webkit-scrollbar {
+      width: 2px
+    }
+
+    .rpanel::-webkit-scrollbar-thumb {
+      background: var(--border)
+    }
+
+    .sgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      padding: 12px
+    }
+
+    .scard {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 11px;
+      text-align: center
+    }
+
+    .sval {
+      font-family: var(--font-d);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1
+    }
+
+    .slbl {
+      font-family: var(--font-m);
+      font-size: 9px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px
+    }
+
+    .irow {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11.5px
+    }
+
+    .iico {
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 1px
+    }
+
+    .ititle {
+      color: var(--text2);
+      font-weight: 600;
+      margin-bottom: 2px
+    }
+
+    .ival {
+      color: var(--text3);
+      font-size: 10px;
+      font-family: var(--font-m)
+    }
+
+    .capitem {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .caphdr {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 5px;
+      color: var(--text2)
+    }
+
+    .caphdr span:last-child {
+      font-family: var(--font-m);
+      color: var(--text3);
+      font-size: 10px
+    }
+
+    .capbar {
+      height: 3px;
+      background: var(--surface);
+      border-radius: 2px;
+      overflow: hidden
+    }
+
+    .capfill {
+      height: 100%;
+      border-radius: 2px;
+      animation: fb 1.5s ease forwards
+    }
+
+    @keyframes fb {
+      from {
+        width: 0
+      }
+    }
+
+    /* INPUT BAR */
+    .inputbar {
+      padding: 14px 36px 18px;
+      background: rgba(7, 8, 16, .96);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .incont {
+      display: flex;
+      gap: 9px;
+      align-items: flex-end
+    }
+
+    .inbox {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 12px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .inbox:focus-within {
+      border-color: rgba(245, 200, 66, .4);
+      box-shadow: 0 0 0 3px rgba(245, 200, 66, .06)
+    }
+
+    .intop {
+      display: flex;
+      align-items: flex-end;
+      gap: 7px
+    }
+
+    #ci {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--font-b);
+      font-size: 13.5px;
+      resize: none;
+      min-height: 22px;
+      max-height: 130px;
+      line-height: 1.6
+    }
+
+    #ci::placeholder {
+      color: var(--text3)
+    }
+
+    .inacts {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0
+    }
+
+    .inibtn {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      transition: all .15s
+    }
+
+    .inibtn:hover {
+      border-color: var(--border2);
+      color: var(--text);
+      background: var(--surface)
+    }
+
+    .inibtn.rec {
+      border-color: rgba(248, 113, 113, .5);
+      color: var(--red);
+      background: rgba(248, 113, 113, .08);
+      animation: blk 1s ease infinite
+    }
+
+    @keyframes blk {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .5
+      }
+    }
+
+    .inftr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .ccnt {
+      font-family: var(--font-m);
+      font-size: 10px;
+      color: var(--text3)
+    }
+
+    .intags {
+      display: flex;
+      gap: 4px
+    }
+
+    .itag {
+      font-family: var(--font-m);
+      font-size: 9px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .tmode {
+      background: rgba(167, 139, 250, .1);
+      color: var(--violet);
+      border: 1px solid rgba(167, 139, 250, .2)
+    }
+
+    .tctx {
+      background: rgba(52, 211, 153, .1);
+      color: var(--green);
+      border: 1px solid rgba(52, 211, 153, .2)
+    }
+
+    .sndbtn {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), var(--orange));
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      transition: all .2s;
+      box-shadow: 0 4px 20px rgba(245, 200, 66, .22);
+      flex-shrink: 0
+    }
+
+    .sndbtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245, 200, 66, .32)
+    }
+
+    .sndbtn:active {
+      transform: translateY(0)
+    }
+
+    .sndbtn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none
+    }
+
+    /* VOICE MODAL */
+    .vmodal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(7, 8, 16, .88);
+      backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 18px;
+      animation: fdi .2s ease
+    }
+
+    .vmodal.show {
+      display: flex
+    }
+
+    @keyframes fdi {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .vorb {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--red), #c0392b);
+      box-shadow: 0 0 0 0 rgba(248, 113, 113, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 46px;
+      animation: vp 1s ease infinite
+    }
+
+    @keyframes vp {
+      0% {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, .4)
+      }
+
+      70% {
+        box-shadow: 0 0 0 28px rgba(248, 113, 113, 0)
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0)
+      }
+    }
+
+    .vlbl {
+      font-family: var(--font-d);
+      font-size: 18px;
+      color: var(--text2)
+    }
+
+    .vtxt {
+      font-family: var(--font-m);
+      font-size: 13px;
+      color: var(--text);
+      max-width: 380px;
+      text-align: center;
+      min-height: 22px
+    }
+
+    .vstop {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      color: var(--text2);
+      font-family: var(--font-b);
+      font-size: 13px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s
+    }
+
+    .vstop:hover {
+      color: var(--red);
+      border-color: rgba(248, 113, 113, .4)
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 88px;
+      left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--card);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-family: var(--font-m);
+      font-size: 12px;
+      padding: 9px 20px;
+      border-radius: 8px;
+      z-index: 200;
+      opacity: 0;
+      transition: all .28s;
+      pointer-events: none
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0)
+    }
+
+    @media(max-width:860px) {
+
+      .lpanel,
+      .rpanel {
+        display: none
+      }
+
+      .msgs,
+      .inputbar {
+        padding-left: 18px;
+        padding-right: 18px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="cvs"></canvas>
+  <div class="noise"></div>
+  <div class="app">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="logo-group">
+        <div class="logo-icon">🚌</div>
+        <div class="logo-text">Bus<b>Pass</b></div>
+        <div class="badge">AI v2.0</div>
+      </div>
+      <div class="topbar-center">
+        <button class="mode-btn active" onclick="setMode('chat',this)">💬 Chat</button>
+        <button class="mode-btn" onclick="setMode('route',this)">🗺️ Routes</button>
+        <button class="mode-btn" onclick="setMode('support',this)">🎫 Support</button>
+      </div>
+      <div class="topbar-right">
+        <div class="status-pill">
+          <div class="pulse-dot"></div>Gemini Free
+        </div>
+        <button class="icon-btn" onclick="exportChat()" title="Export">⬇️</button>
+        <button class="icon-btn" onclick="togglePanel('l')" title="Toggle sidebar">◀</button>
+        <button class="icon-btn" onclick="clearChat()" title="Clear">🗑️</button>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <!-- LEFT PANEL -->
+      <div class="lpanel" id="lpanel">
+        <div class="psec">
+          <div class="plabel">Quick Route Search</div>
+          <div class="rwidget">
+            <select class="rsel" id="fc">
+              <option value="">From City</option>
+              <option>Hyderabad</option>
+              <option>Chennai</option>
+              <option>Bangalore</option>
+              <option>Mumbai</option>
+              <option>Pune</option>
+              <option>Delhi</option>
+              <option>Vijayawada</option>
+              <option>Visakhapatnam</option>
+              <option>Tirupati</option>
+              <option>Coimbatore</option>
+              <option>Kochi</option>
+              <option>Kolkata</option>
+            </select>
+            <div class="rarrow">⇅</div>
+            <select class="rsel" id="tc">
+              <option value="">To City</option>
+              <option>Hyderabad</option>
+              <option>Chennai</option>
+              <option>Bangalore</option>
+              <option>Mumbai</option>
+              <option>Pune</option>
+              <option>Delhi</option>
+              <option>Vijayawada</option>
+              <option>Visakhapatnam</option>
+              <option>Tirupati</option>
+              <option>Coimbatore</option>
+              <option>Kochi</option>
+              <option>Kolkata</option>
+            </select>
+            <select class="rsel" id="cls">
+              <option value="">Travel Class</option>
+              <option>Standard</option>
+              <option>Express</option>
+              <option>Sleeper</option>
+            </select>
+            <button class="wbtn" onclick="searchRoute()">Search via AI →</button>
+          </div>
+        </div>
+        <div class="plabel" style="padding:12px 14px 4px">Quick Questions</div>
+        <div class="prompts">
+          <div class="chip" onclick="sq('How do I book a bus ticket on BusPass?')"><span class="ci">🎫</span>Book a
+            ticket</div>
+          <div class="chip" onclick="sq('What routes are available from Hyderabad to Bangalore?')"><span
+              class="ci">🗺️</span>Available routes</div>
+          <div class="chip" onclick="sq('How do I cancel my ticket and get a refund?')"><span class="ci">❌</span>Cancel
+            & refund</div>
+          <div class="chip" onclick="sq('How is my ticket protected from loss or theft?')"><span
+              class="ci">🔒</span>Ticket security</div>
+          <div class="chip" onclick="sq('What are the fare prices for each travel class?')"><span
+              class="ci">💰</span>Fares & pricing</div>
+          <div class="chip" onclick="sq('How does QR code boarding work?')"><span class="ci">📱</span>QR boarding</div>
+          <div class="chip" onclick="sq('What is the baggage allowance for each class?')"><span
+              class="ci">🧳</span>Baggage rules</div>
+          <div class="chip" onclick="sq('How do I create a BusPass account?')"><span class="ci">👤</span>Register
+            account</div>
+          <div class="chip" onclick="sq('Is BusPass available 24/7?')"><span class="ci">⏰</span>Availability</div>
+          <div class="chip" onclick="sq('What payment methods does BusPass accept?')"><span class="ci">💳</span>Payments
+          </div>
+          <div class="chip" onclick="sq('Can I book for multiple passengers at once?')"><span class="ci">👥</span>Group
+            booking</div>
+          <div class="chip" onclick="sq('How do I reach BusPass customer support?')"><span class="ci">🆘</span>Get
+            support</div>
+        </div>
+      </div>
+
+      <!-- CHAT CENTER -->
+      <div class="chat-center">
+        <div class="msgs" id="msgs">
+          <div class="welcome" id="welcome">
+            <div class="worb">🚌</div>
+            <div class="wtitle">BusPass AI Command Center</div>
+            <div class="wsub">Powered by Claude Sonnet. Instant answers about routes, bookings, fares, cancellations,
+              and everything BusPass — available 24/7.</div>
+            <div class="wchips">
+              <div class="wchip" onclick="sq('What routes are available?')">🗺️ Browse routes</div>
+              <div class="wchip" onclick="sq('How do I book a ticket?')">🎫 Book ticket</div>
+              <div class="wchip" onclick="sq('What is the refund policy?')">↩️ Refund policy</div>
+              <div class="wchip" onclick="sq('How does QR boarding work?')">📱 QR boarding</div>
+              <div class="wchip" onclick="sq('How is the system secured?')">🔒 Security</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INPUT -->
+        <div class="inputbar">
+          <div class="incont">
+            <div class="inbox">
+              <div class="intop">
+                <textarea id="ci" rows="1"
+                  placeholder="Ask anything about BusPass routes, bookings, fares, or policies..." onkeydown="hk(event)"
+                  oninput="oi(this)"></textarea>
+                <div class="inacts">
+                  <button class="inibtn" id="vbtn" onclick="toggleVoice()" title="Voice input">🎙️</button>
+                  <button class="inibtn" onclick="insertTpl()" title="Templates">📋</button>
+                </div>
+              </div>
+              <div class="inftr">
+                <div class="ccnt" id="cc">0 / 500</div>
+                <div class="intags">
+                  <span class="itag tmode" id="mtag">Chat</span>
+                  <span class="itag tctx" id="ctag">0 msgs</span>
+                </div>
+              </div>
+            </div>
+            <button class="sndbtn" id="sbtn" onclick="send()">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="rpanel" id="rpanel">
+        <div class="psec">
+          <div class="plabel">Session Stats</div>
+          <div class="sgrid">
+            <div class="scard">
+              <div class="sval" id="smsg">0</div>
+              <div class="slbl">Messages</div>
+            </div>
+            <div class="scard">
+              <div class="sval" id="stur">0</div>
+              <div class="slbl">Turns</div>
+            </div>
+            <div class="scard" style="grid-column:span 2">
+              <div class="sval" id="stm">0s</div>
+              <div class="slbl">Avg Response</div>
+            </div>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="plabel">AI Capabilities</div>
+        </div>
+        <div class="capitem">
+          <div class="caphdr"><span>Route Knowledge</span><span>98%</span></div>
+          <div class="capbar">
+            <div class="capfill" style="width:98%;background:linear-gradient(90deg,var(--gold),var(--orange))"></div>
+          </div>
+        </div>
+        <div class="capitem">
+          <div class="caphdr"><span>Booking Guidance</span><span>96%</span></div>
+          <div class="capbar">
+            <div class="capfill" style="width:96%;background:linear-gradient(90deg,var(--cyan),var(--violet))"></div>
+          </div>
+        </div>
+        <div class="capitem">
+          <div class="caphdr"><span>Policy Accuracy</span><span>99%</span></div>
+          <div class="capbar">
+            <div class="capfill" style="width:99%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div>
+          </div>
+        </div>
+        <div class="capitem">
+          <div class="caphdr"><span>Language Fluency</span><span>95%</span></div>
+          <div class="capbar">
+            <div class="capfill" style="width:95%;background:linear-gradient(90deg,var(--violet),var(--red))"></div>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="plabel">System Info</div>
+        </div>
+        <div class="irow"><span class="iico">🤖</span>
+          <div>
+            <div class="ititle">Model</div>
+            <div class="ival">Gemini 1.5 Flash (Free)</div>
+          </div>
+        </div>
+        <div class="irow"><span class="iico">🔑</span>
+          <div>
+            <div class="ititle">Auth</div>
+            <div class="ival">JWT + bcrypt-12</div>
+          </div>
+        </div>
+        <div class="irow"><span class="iico">🗄️</span>
+          <div>
+            <div class="ititle">Database</div>
+            <div class="ival">MySQL 8 (pooled)</div>
+          </div>
+        </div>
+        <div class="irow"><span class="iico">☁️</span>
+          <div>
+            <div class="ititle">Cloud SLA</div>
+            <div class="ival">99.9% uptime</div>
+          </div>
+        </div>
+        <div class="irow"><span class="iico">🛡️</span>
+          <div>
+            <div class="ititle">Security</div>
+            <div class="ival">Helmet + CORS + RateLimit</div>
+          </div>
+        </div>
+        <div class="irow"><span class="iico">📋</span>
+          <div>
+            <div class="ititle">Context</div>
+            <div class="ival" id="ictx">0 messages</div>
+          </div>
+        </div>
+        <div class="psec" style="margin-top:auto">
+          <div class="plabel">Support</div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.8">📧 support@buspass.in<br>🕐 24/7 AI
+            Support<br>📞 1800-BUS-PASS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOICE MODAL -->
+  <div class="vmodal" id="vm">
+    <div class="vorb">🎙️</div>
+    <div class="vlbl">Listening...</div>
+    <div class="vtxt" id="vtxt">Speak your question now</div>
+    <button class="vstop" onclick="stopVoice()">Stop Recording</button>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ── PARTICLE CANVAS ── */
+    const cv = document.getElementById('cvs'), cx = cv.getContext('2d');
+    let W, H, pts = [];
+    function rsz() { W = cv.width = innerWidth; H = cv.height = innerHeight }
+    rsz(); window.addEventListener('resize', rsz);
+    class Pt {
+      constructor() { this.reset() }
+      reset() {
+        this.x = Math.random() * W; this.y = Math.random() * H; this.s = Math.random() * 1.4 + .3;
+        this.vx = (Math.random() - .5) * .3; this.vy = (Math.random() - .5) * .3;
+        this.o = Math.random() * .45 + .08;
+        const r = Math.random(); this.c = r > .65 ? '#f5c842' : r > .4 ? '#3de8ff' : '#a78bfa'
+      }
+      update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset() }
+      draw() { cx.beginPath(); cx.arc(this.x, this.y, this.s, 0, Math.PI * 2); cx.fillStyle = this.c; cx.globalAlpha = this.o; cx.fill() }
+    }
+    for (let i = 0; i < 110; i++)pts.push(new Pt());
+    function anim() {
+      cx.clearRect(0, 0, W, H);
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y, d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 80) {
+            cx.beginPath(); cx.strokeStyle = '#f5c842'; cx.globalAlpha = (1 - d / 80) * .045;
+            cx.lineWidth = .5; cx.moveTo(pts[i].x, pts[i].y); cx.lineTo(pts[j].x, pts[j].y); cx.stroke()
+          }
+        }
+        pts[i].update(); pts[i].draw();
+      }
+      cx.globalAlpha = 1; requestAnimationFrame(anim);
+    }
+    anim();
+
+    /* ── STATE ── */
+    const hist = [];
+    let loading = false, mode = 'chat', totalT = 0, turns = 0, recog = null, isRec = false;
+
+    // ✅ PASTE YOUR FREE GEMINI API KEY HERE
+    // Get it FREE at: https://aistudio.google.com → "Get API Key" (no card needed)
+    const GEMINI_API_KEY = 'AIzaSyC9cZS1bQ2LU_C0L5NlwsyP626vfg718gs';
+
+    const SYS = `You are BusPass AI — the official intelligent assistant for BusPass, a cloud-based bus ticket booking platform.
+
+## ABOUT BUSPASS
+BusPass is a modern cloud-hosted bus pass and ticket booking system. Available 24/7, accessible from any browser, handling high traffic via MySQL connection pooling and Express rate limiting. Backend: Node.js + Express + MySQL, secured with JWT authentication, bcrypt (12 rounds) password hashing, and Helmet.js security headers.
+
+## ROUTES & CITIES
+Popular routes: Hyderabad↔Chennai, Hyderabad↔Bangalore, Hyderabad↔Mumbai, Hyderabad↔Pune, Hyderabad↔Delhi, Chennai↔Bangalore, Bangalore↔Mumbai, Vijayawada↔Hyderabad, Visakhapatnam↔Hyderabad, Tirupati↔Chennai, Coimbatore↔Chennai, Kochi↔Bangalore, Kolkata↔Delhi and 100+ more.
+Timings: Morning (5–9AM), Afternoon (11AM–2PM), Evening (4–7PM), Night (9–11PM).
+Classes: Standard (economy), Express (faster, fewer stops), Sleeper (overnight berths, premium).
+
+## BOOKING STEPS
+1. Register or log in to BusPass
+2. Open "Book Ticket"
+3. Select From city, To city, travel date
+4. Choose a route and timing
+5. Select passengers and travel class
+6. Review server-calculated fare and confirm
+7. Instant e-ticket with unique UUID and QR code is issued
+
+## PRICING / FARES
+Fares calculated server-side (tamper-proof). Standard: most affordable. Express: ~20% premium. Sleeper: ~40-60% premium + extra baggage.
+Discounts: Groups 5+: 8% off; 10+: 12% off. Seniors 60+: 15% off all classes. Students: 10% off Standard/Express.
+No hidden fees. Fare shown at confirmation is final.
+
+## TICKET SECURITY
+- UUID per ticket (universally unique, impossible to duplicate)
+- Cryptographically tied to user JWT token
+- QR code encodes: ticketId + route + date + timing + passengers + class + fare
+- Server-side pricing (client cannot alter fare)
+- Only authenticated owner or admin can cancel
+- Digital-only: no physical loss risk
+- QR expires after boarding scan — single use
+
+## CANCELLATIONS & REFUNDS
+Cancel from "My Tickets" before departure.
+- Within 24h of booking: 100% refund
+- 24–48h before departure: 80% refund
+- Under 24h before departure: 50% refund
+- No-show: no refund
+Refunds processed in 3–5 business days to original payment method.
+
+## ACCOUNT & AUTH
+Registration: name, email, phone, password. JWT tokens valid 7 days. Forgot password: OTP via email. bcrypt-12 password hashing.
+
+## QR CODE BOARDING
+Show QR on phone screen to conductor/scanner at boarding. Encoded: BUSPASS|ticketId|route|date|timing|passengers|class|fare. Becomes invalid after scan (one-time use). Always accessible in "My Tickets".
+
+## PAYMENT METHODS
+UPI (PhonePe, GPay, Paytm, BHIM), Debit/Credit cards (Visa, Mastercard, RuPay), Net Banking, BusPass Wallet, EMI for bookings above ₹2000.
+
+## BAGGAGE
+Standard: 1 bag ≤15kg free, ₹50/kg excess. Express: 1 bag ≤20kg free, ₹40/kg excess. Sleeper: 2 bags ≤25kg each free. Oversized: advance notice via support.
+
+## SYSTEM RELIABILITY
+Cloud-hosted, 99.9% uptime SLA. Rate limiting: 100 req/15min per IP. MySQL connection pooling. PM2 auto-restart. Stateless JWT enables horizontal scaling.
+
+## SUPPORT
+AI Assistant 24/7 (me!). Email: support@buspass.in. Phone: 1800-BUS-PASS. Always share Ticket ID for booking issues.
+
+## RESPONSE STYLE
+- Use **bold** for key terms. Use bullet lists for steps.
+- Use ## for section headers on multi-topic answers.
+- End complex answers with 2-3 relevant follow-up questions the user might want to ask (as plain questions on separate lines ending with ?).
+- Be warm, accurate, and helpful.`;
+
+    /* ── HELPERS ── */
+    function ts() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    function toast(m, d = 2500) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), d) }
+    function upd() {
+      document.getElementById('smsg').textContent = hist.length;
+      document.getElementById('stur').textContent = turns;
+      document.getElementById('stm').textContent = turns > 0 ? Math.round(totalT / turns * 10) / 10 + 's' : '0s';
+      document.getElementById('ctag').textContent = hist.length + ' msgs';
+      const ic = document.getElementById('ictx'); if (ic) ic.textContent = hist.length + ' messages';
+    }
+    function togglePanel(s) { document.getElementById(s + 'panel').classList.toggle('collapsed') }
+    function setMode(m, btn) {
+      mode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+      const l = { chat: 'Chat', route: 'Routes', support: 'Support' }; document.getElementById('mtag').textContent = l[m]; toast('Mode: ' + l[m]);
+    }
+
+    /* ── RENDER ── */
+    function rmWelcome() { const w = document.getElementById('welcome'); if (w) w.remove() }
+    function fmt(t) {
+      return t
+        .replace(/^## (.+)$/gm, '<div class="shead">$1</div>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
+        .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+    }
+    function getFU(t) {
+      return t.split('\n').filter(l => l.trim().endsWith('?') && l.trim().length > 15 && l.trim().length < 120)
+        .map(l => l.trim().replace(/^[\d\.\-\*\s]+/, '')).slice(0, 3);
+    }
+
+    function addMsg(role, text, typing = false) {
+      rmWelcome();
+      const msgs = document.getElementById('msgs');
+      if (typing) {
+        const d = document.createElement('div'); d.className = 'mgroup'; d.id = 'tmsg';
+        d.innerHTML = `<div class="mrow"><div class="av bav">🚌</div><div class="tbub"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+        msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return;
+      }
+      const g = document.createElement('div'); g.className = 'mgroup';
+      const row = document.createElement('div'); row.className = `mrow${role === 'user' ? ' urow' : ''}`;
+      const av = document.createElement('div'); av.className = `av ${role === 'user' ? 'uav' : 'bav'}`; av.textContent = role === 'user' ? '👤' : '🚌';
+      const wrap = document.createElement('div'); wrap.className = 'bwrap';
+      const bub = document.createElement('div'); bub.className = `bubble ${role === 'user' ? 'ubub' : 'bbub'}`;
+      bub.innerHTML = role === 'user' ? text.replace(/</g, '&lt;') : fmt(text);
+      wrap.appendChild(bub);
+      const t2 = document.createElement('div'); t2.className = 'mts'; t2.textContent = ts(); wrap.appendChild(t2);
+      if (role === 'bot') {
+        const fus = getFU(text);
+        if (fus.length > 0) {
+          const fd = document.createElement('div'); fd.className = 'followups';
+          fus.forEach(q => { const b = document.createElement('button'); b.className = 'fubtn'; b.textContent = q; b.onclick = () => sq(q); fd.appendChild(b) });
+          wrap.appendChild(fd);
+        }
+      }
+      row.appendChild(av); row.appendChild(wrap); g.appendChild(row);
+      if (role === 'bot') {
+        const ac = document.createElement('div'); ac.className = 'mactions';
+        ac.innerHTML = `<button class="rbtn" onclick="react(this,'👍')">👍</button><button class="rbtn" onclick="react(this,'👎')">👎</button><button class="rbtn" onclick="react(this,'⭐')">⭐</button><button class="rbtn" onclick="copyMsg(this)" style="margin-left:3px">📋 Copy</button>`;
+        g.appendChild(ac);
+      }
+      msgs.appendChild(g); msgs.scrollTop = msgs.scrollHeight;
+    }
+    function react(btn, e) { btn.parentElement.querySelectorAll('.rbtn').forEach(b => { if (b !== btn) b.classList.remove('active') }); btn.classList.toggle('active'); if (btn.classList.contains('active')) toast('Feedback recorded ' + e) }
+    function copyMsg(btn) { navigator.clipboard.writeText(btn.closest('.mgroup').querySelector('.bubble').innerText).then(() => toast('✅ Copied!')) }
+
+    /* ── SEND ── */
+    async function send() {
+      const inp = document.getElementById('ci');
+      const text = inp.value.trim();
+      if (!text || loading) return;
+      inp.value = ''; inp.style.height = 'auto'; oi(inp); setLoad(true);
+      addMsg('user', text); hist.push({ role: 'user', content: text }); upd();
+      const t0 = Date.now(); addMsg('bot', '', true);
+      try {
+        const mi = { route: 'Focus on routes, timings, and city connections. ', support: 'Act as a support agent, be empathetic and solution-focused. ', chat: '' };
+        // Check API key
+        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'PASTE_YOUR_GEMINI_KEY_HERE') {
+          document.getElementById('tmsg')?.remove();
+          addMsg('bot', '⚠️ Please add your free Gemini API key.\n\n**Steps:**\n- Go to aistudio.google.com\n- Click "Get API Key"\n- Copy the key\n- Open this HTML file and paste it where it says PASTE_YOUR_GEMINI_KEY_HERE');
+          setLoad(false); upd(); return;
+        }
+        // Build Gemini conversation format
+        const geminiMsgs = hist.slice(0, -1).map(m => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }]
+        }));
+        // Add current user message
+        geminiMsgs.push({ role: 'user', parts: [{ text: hist[hist.length - 1].content }] });
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: mi[mode] + SYS }] },
+              contents: geminiMsgs,
+              generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+            })
+          }
+        );
+        const d = await r.json();
+        document.getElementById('tmsg')?.remove();
+        totalT += (Date.now() - t0) / 1000; turns++;
+        // Handle Gemini response
+        if (d.candidates?.[0]?.content?.parts?.[0]?.text) {
+          const rep = d.candidates[0].content.parts[0].text;
+          hist.push({ role: 'assistant', content: rep }); addMsg('bot', rep);
+        } else if (d.error) {
+          addMsg('bot', `⚠️ API Error: ${d.error.message}\n\nCheck your Gemini API key is correct.`);
+        } else {
+          addMsg('bot', '⚠️ Something went wrong. Please try again.');
+        }
+      } catch (e) { document.getElementById('tmsg')?.remove(); addMsg('bot', '⚠️ Connection error. Please check your internet and try again.'); }
+      setLoad(false); upd();
+    }
+    function sq(t) { document.getElementById('ci').value = t; oi(document.getElementById('ci')); send() }
+    function searchRoute() {
+      const f = document.getElementById('fc').value, t = document.getElementById('tc').value, c = document.getElementById('cls').value;
+      if (!f || !t) { toast('⚠️ Select both cities'); return }
+      if (f === t) { toast('⚠️ Cities must be different'); return }
+      sq(`What routes and timings are available from ${f} to ${t}${c ? ' in ' + c + ' class' : ''}? Include fares, departure times, and travel tips.`);
+    }
+    function insertTpl() {
+      const ts = ['I want to book a ticket from [City A] to [City B] on [Date]. What options are available?', 'My ticket ID is [TICKET-ID]. I need help cancelling it.', 'What is the fare from [City] to [City] in Sleeper class for 2 passengers?', 'I lost access to my QR code. How can I retrieve my ticket?'];
+      const t = ts[Math.floor(Math.random() * ts.length)];
+      document.getElementById('ci').value = t; oi(document.getElementById('ci')); document.getElementById('ci').focus();
+    }
+    function exportChat() {
+      if (!hist.length) { toast('No messages to export'); return }
+      let txt = `=== BusPass AI Chat Export ===\nExported: ${new Date().toLocaleString()}\nTotal: ${hist.length} messages\n\n`;
+      hist.forEach(m => { txt += `[${m.role.toUpperCase()}]\n${m.content}\n\n` });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' })); a.download = `buspass-chat-${Date.now()}.txt`; a.click(); toast('✅ Chat exported!');
+    }
+    function clearChat() {
+      hist.length = 0; turns = 0; totalT = 0;
+      document.getElementById('msgs').innerHTML = `<div class="welcome" id="welcome"><div class="worb">🚌</div><div class="wtitle">BusPass AI Command Center</div><div class="wsub">Powered by Google Gemini (Free). Instant answers about routes, bookings, fares, cancellations, and everything BusPass — available 24/7.</div><div class="wchips"><div class="wchip" onclick="sq('What routes are available?')">🗺️ Browse routes</div><div class="wchip" onclick="sq('How do I book a ticket?')">🎫 Book ticket</div><div class="wchip" onclick="sq('What is the refund policy?')">↩️ Refund policy</div><div class="wchip" onclick="sq('How does QR boarding work?')">📱 QR boarding</div><div class="wchip" onclick="sq('How is the system secured?')">🔒 Security</div></div></div>`;
+      upd(); toast('🗑️ Chat cleared');
+    }
+    function setLoad(v) { loading = v; document.getElementById('sbtn').disabled = v; document.getElementById('ci').disabled = v }
+    function hk(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }
+    function oi(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 130) + 'px'; document.getElementById('cc').textContent = el.value.length + ' / 500' }
+
+    /* ── VOICE ── */
+    function toggleVoice() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { toast('⚠️ Voice not supported. Try Chrome.'); return }
+      isRec ? stopVoice() : startVoice();
+    }
+    function startVoice() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition; recog = new SR();
+      recog.lang = 'en-IN'; recog.continuous = false; recog.interimResults = true;
+      recog.onresult = e => {
+        const t = Array.from(e.results).map(r => r[0].transcript).join('');
+        document.getElementById('vtxt').textContent = t;
+        if (e.results[e.results.length - 1].isFinal) { document.getElementById('ci').value = t; oi(document.getElementById('ci')); stopVoice(); setTimeout(() => send(), 500); }
+      };
+      recog.onerror = () => stopVoice(); recog.onend = () => { if (isRec) stopVoice() };
+      recog.start(); isRec = true;
+      document.getElementById('vm').classList.add('show');
+      document.getElementById('vbtn').classList.add('rec');
+      document.getElementById('vtxt').textContent = 'Listening...';
+    }
+    function stopVoice() { isRec = false; recog?.stop(); document.getElementById('vm').classList.remove('show'); document.getElementById('vbtn').classList.remove('rec') }
+
+    upd();
+  </script>
+</body>
+
+</html>
