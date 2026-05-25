@@ -28,6 +28,12 @@ app.use(cors({
   origin: process.env.CLIENT_ORIGIN || '*',
   credentials: true,
 }));
+
+// app.use(cors({
+//   origin: ['https://chatbox-codealpha.netlify.app', '*'],
+//   credentials: true
+// }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
