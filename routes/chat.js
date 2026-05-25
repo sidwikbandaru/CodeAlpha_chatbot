@@ -7,7 +7,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 router.post('/', async (req, res) => {
     try {
         const { messages, system, userCtx } = req.body;
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
         const history = messages.slice(0, -1);
         const lastMsg = messages[messages.length - 1];

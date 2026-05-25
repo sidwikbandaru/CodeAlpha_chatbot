@@ -6,9 +6,9 @@ const { getStats, getUsers, deleteUser, getRevenue } = require('../controllers/a
 // All admin routes require login + admin role
 router.use(authenticate, requireAdmin);
 
-router.get('/stats',        getStats);
-router.get('/users',        getUsers);
+router.get('/stats', getStats);
+router.get('/users', getUsers);
 router.delete('/users/:id', deleteUser);
-router.get('/revenue',      getRevenue);
+router.get('/revenue', getRevenue);
 
 module.exports = router;
