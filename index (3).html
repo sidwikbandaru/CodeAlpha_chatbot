@@ -2804,7 +2804,14 @@
 
     // ✅ PASTE YOUR FREE GEMINI KEY HERE
     // Get it FREE (no card) → https://aistudio.google.com → "Get API Key"
-    const BP_GEMINI_KEY = process.env.GEMINI_API_KEY;
+    // const BP_GEMINI_KEY = process.env.GEMINI_API_KEY;
+
+    const res = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage })
+    });
+    const data = await res.json();
 
     const BP_SYS = `You are BusPass AI — the friendly official assistant embedded inside the BusPass cloud ticket booking platform.
 

@@ -16,6 +16,9 @@ const routeRoutes = require('./routes/routes');
 const ticketRoutes = require('./routes/tickets');
 const adminRoutes = require('./routes/admin');
 
+const chatRoutes = require('./routes/chat');
+app.use('/api/chat', chatRoutes);
+
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
