@@ -17,7 +17,6 @@ const ticketRoutes = require('./routes/tickets');
 const adminRoutes = require('./routes/admin');
 
 const chatRoutes = require('./routes/chat');
-app.use('/api/chat', chatRoutes);
 
 const app = express();
 app.set('trust proxy', 1);
@@ -45,6 +44,9 @@ app.use(express.static(path.join(__dirname)));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+app.use('/api/chat', chatRoutes);
+
 
 // Rate limiting — 100 requests per 15 minutes per IP
 app.use('/api/', rateLimit({
