@@ -2804,13 +2804,9 @@
 
     // ✅ PASTE YOUR FREE GEMINI KEY HERE
     // Get it FREE (no card) → https://aistudio.google.com → "Get API Key"
-    // const BP_GEMINI_KEY = process.env.GEMINI_API_KEY;
+    const BP_GEMINI_KEY = 'BACKEND_MODE';
 
-    const res = await fetch(`${API}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage })
-    });
+
     const data = await res.json();
 
     const BP_SYS = `You are BusPass AI — the friendly official assistant embedded inside the BusPass cloud ticket booking platform.
@@ -3015,27 +3011,18 @@ Keep answers concise and helpful. Use **bold** for key info. Use bullet points f
           { role: 'user', parts: [{ text: text }] }
         ];
 
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${BP_GEMINI_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: allMsgs,
-              generationConfig: { maxOutputTokens: 600, temperature: 0.7 }
-            })
-          }
-        );
+        const res = await fetch(`${API}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: allMsgs, system: BP_SYS, userCtx })
+        });
 
         const data = await res.json();
         document.getElementById('bp-typing')?.remove();
 
-        if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-          const reply = data.candidates[0].content.parts[0].text;
-          bpHist.push({ role: 'assistant', content: reply });
-          bpAddMsg('bot', reply);
-        } else if (data.error) {
-          bpAddMsg('bot', `⚠️ Error: ${data.error.message}\n\nCheck your Gemini API key.`);
+        if (data.reply) {
+          bpHist.push({ role: 'assistant', content: data.reply });
+          bpAddMsg('bot', data.reply);
         } else {
           bpAddMsg('bot', '⚠️ Something went wrong. Please try again.');
         }
