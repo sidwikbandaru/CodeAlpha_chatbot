@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');   // ✅ FIX 1: require path once, at the top
+const fs = require('fs');
 
 const { pool, testConnection } = require('./config/db');
 
@@ -110,12 +111,43 @@ async function seedAdmin() {
   }
 }
 
+async function seedDatabase() {
+  try {
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM routes');
+    const count = rows[0].count;
+    if (count < 5) {
+      console.log('🌱  Database has few/no routes. Running auto-seed...');
+      const seedFilePath = path.join(__dirname, 'sql', 'seed.sql');
+      if (fs.existsSync(seedFilePath)) {
+        const seedSql = fs.readFileSync(seedFilePath, 'utf8');
+        const queries = seedSql
+          .replace(/--.*$/gm, '')
+          .split(';')
+          .map(q => q.trim())
+          .filter(q => q.length > 0);
+        for (let query of queries) {
+          if (query.toUpperCase().startsWith('USE ')) continue;
+          await pool.query(query);
+        }
+        console.log('✅  Database routes and timings seeded successfully!');
+      } else {
+        console.warn('⚠️  seed.sql not found, skipping routes seeding.');
+      }
+    } else {
+      console.log(`📊  Database already contains ${count} routes. Skipping auto-seed.`);
+    }
+  } catch (err) {
+    console.error('❌  Auto-seed failed:', err.message);
+  }
+}
+
 // ═══════════════════════════════════════════════════════
 //  START
 // ═══════════════════════════════════════════════════════
 async function start() {
   await testConnection();
   await seedAdmin();
+  await seedDatabase();
   app.listen(PORT, () => {
     console.log(`🚌  BusPass API running → http://localhost:${PORT}`);
     console.log(`📋  Endpoints:`);
