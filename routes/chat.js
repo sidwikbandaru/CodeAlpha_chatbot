@@ -9,7 +9,8 @@ router.post('/', async (req, res) => {
     try {
         const { messages } = req.body;
         const lastMsg = messages[messages.length - 1];
-        const result = await model.generateContent(lastMsg.parts[0].text);
+        const prompt = `You are BusPass AI, a helpful bus ticket booking assistant. Answer concisely.\n\nUser: ${lastMsg.parts[0].text}`;
+        const result = await model.generateContent(prompt);
         res.json({ reply: result.response.text() });
     } catch (err) {
         console.error('Gemini error:', err);
