@@ -3,21 +3,17 @@ const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
 router.post('/', async (req, res) => {
     try {
-        const { messages, system, userCtx } = req.body;
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
-
-        const history = messages.slice(0, -1);
+        const { messages } = req.body;
         const lastMsg = messages[messages.length - 1];
-
-        const chat = model.startChat({ history });
-        const result = await chat.sendMessage(lastMsg.parts[0].text);
+        const result = await model.generateContent(lastMsg.parts[0].text);
         res.json({ reply: result.response.text() });
     } catch (err) {
         console.error('Gemini error:', err);
-        res.status(500).json({ error: 'AI error', reply: '⚠️ AI is unavailable right now.' });
+        res.status(500).json({ reply: '⚠️ AI is unavailable right now.' });
     }
 });
 
